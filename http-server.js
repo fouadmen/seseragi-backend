@@ -3,7 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const Measure = require("./models/Measure");
 const Device = require("./models/Devices");
-
+const User = require("./models/Users");
 app.use(bodyParser.json());
 
 app.get('/', (req,res)=>{
@@ -97,6 +97,37 @@ app.post('/devices',(req, res)=>{
 /*-------------------------------------------------------------------------------- */
 /*--------------------------- Auth routes ---------------------------------------- */
 
+app.post('/users',(req, res)=>{
+    console.log(req.body.userId);
+    User.find({userId : req.body.userId},(err, user)=>{
+        if(err){
+            console.error('Error while searching for user');
+            res.send(false);
+            return;
+        }else{
+            if(user.length===0){
+                console.log('user is not found', user);
+                const _user = new User(req.body);
+                User.create(_user,(err)=>{
+                    if(err){
+                        console.error('Error while creating new user');
+                        res.send(false);
+                        return;
+                    }
+                    res.send(true);
+                    return;
+                });
+            }
+            res.send(true);
+            return;
+        }
+    });
+});
+
+app.get('/users',(req, res)=>{
+    res.send('res');
+    console.log('here')
+});
 
 
 /*-------------------------------------------------------------------------------- */

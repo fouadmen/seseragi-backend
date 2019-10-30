@@ -30,6 +30,7 @@ mqttServer.on('clientConnected', function(client) {
 mqttServer.on('published', function(packet) {
     //handle update logic here
     //TODO:update device connection status
+    //TODO: handle case when two clients want to reach the same device !
     const receivedData = packet;
     //console.log(receivedData);
     if(receivedData.topic === 'state'){
