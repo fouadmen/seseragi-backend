@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 //TODO: adapt mongodb to use case
 const DEBUG = false;
-const connectionString = DEBUG ? 'mongodb://localhost:27017/SeseragiDB' : 'mongodb://<seseragiDb:B9nQT9iTAb@ds241408.mlab.com:41408/heroku_xbjkx44m';
+const connectionString = DEBUG ? 'mongodb://localhost:27017/SeseragiDB' : 'mongodb://seseragiDb:B9nQT9iTAb@ds241408.mlab.com:41408/heroku_xbjkx44m';
 console.log(connectionString);
 mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:true})
     .then(()=>console.log('Connected to MongoDB'))
