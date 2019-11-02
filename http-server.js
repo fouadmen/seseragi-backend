@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 
 app.get('/', (req,res)=>{
     console.log('in the index');
-
+    res.send("Index route");
 });
 
 /*--------------------------- Measures routes ------------------------------------ */
