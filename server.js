@@ -1,15 +1,17 @@
 //TODO: this can be used to handle connection inactivity const timeout = require('infinite-timeout'); const NO_ACTIVITY_TIMEOUT = 20000;
+const timeout =require('infinite-timeout');
 const mosca= require('mosca');
 const app = require('./http-server');
 const server = require('http').createServer(app);
 const axios = require('axios');
 //const EvenEmitter = require('./EventEmitter');
 const webSocketServer = require('websocket').server;
+const Device = require("./models/Devices");
 const port = process.env.PORT || 9000;
 // Maintains all active connections in this object
 console.log('port :', port);
 const wsClients = {};
-
+const mqttClients = {};
 const wsServer = new webSocketServer({
     httpServer: server
 });
@@ -24,25 +26,25 @@ const moscaSettings = {
 const mqttServer = new mosca.Server(moscaSettings, setup);
 
 mqttServer.on('clientConnected', function(client) {
-    console.log('client connected : ', client.id);
+    console.log('client ');
+    if(!mqttClients[client.id])
+        mqttClients[client.id] = {clientId : client.id, timeout : timeout.set(()=>deleteMqttClient(client.id), 80000)};
+    updateDeviceState(client.id, "connected");
 });
 
 mqttServer.on('published', function(packet) {
-    //handle update logic here
-    //TODO:update device connection status
     //TODO: handle case when two clients want to reach the same device !
     const receivedData = packet;
-    //console.log(receivedData);
     if(receivedData.topic === 'state'){
-        //TODO: send update to connected clients
         const _data = JSON.parse(packet.payload.toString());
+        timeout.clear(mqttClients[_data.clientId].timeout);
         if(wsClients[_data.clientId]){
-            statusChange(_data)
-            //EvenEmitter.publish('statusChange',_data);
+            statusChange(_data);
         }
     } else if (receivedData.topic ==='outTopic') {
         const _data = JSON.parse(packet.payload.toString());
         let postRequests = [];
+        timeout.clear(mqttClients[_data.clientId].timeout);
         (Object.keys(_data.data)).forEach((dataType)=>{
             const _newMeasure = {
                 client: _data.clientId,
@@ -59,9 +61,27 @@ mqttServer.on('published', function(packet) {
 });
 
 function setup() {
-    console.log('Mosca server is up and running');
+    console.log('Mqtt server is up and running');
 }
 
+function deleteMqttClient(clientId){
+    updateDeviceState(clientId, "disconnect");
+    delete mqttClients[clientId];
+    console.log('Mqtt client has been deleted : ', clientId);
+}
+
+function updateDeviceState(deviceId, state){
+    Device.findOneAndUpdate(
+        {"deviceId" : deviceId},
+        {$set:{"state" : state, "time": Math.floor(Date.now() / 1000).toString()}},
+        {useFindAndModify:false},
+        (err)=>{
+            if(err){
+                console.error('Error while updating device state : ', err);
+            }
+        }
+    )
+}
 /*--------------------------------------------*/
 
 
