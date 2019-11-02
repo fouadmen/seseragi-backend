@@ -9,6 +9,7 @@ mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:tru
 //TODO : associate this device to its owen
 const DeviceSchema = new mongoose.Schema({
     deviceId: String,
+    name: String,
     time: String,
     state:String,
     owner: String,

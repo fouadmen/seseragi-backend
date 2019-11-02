@@ -38,6 +38,7 @@ app.post('/measures', (req, res)=>{
 
 app.get('/measures/:deviceId', (req,res)=>{
     const _deviceId = req.params.deviceId;
+
     Measure.find({client : _deviceId}, (err, measures)=>{
         if(err){
             console.log(err);
@@ -50,13 +51,14 @@ app.get('/measures/:deviceId', (req,res)=>{
 app.get('/measures/:deviceId/:dataType', (req,res)=>{
     const _dataType = req.params.dataType.toLowerCase();
     const _deviceId = req.params.deviceId;
+    console.log('trying to get measures data for : ', _deviceId, _dataType);
     Measure.find({client : _deviceId, type : _dataType}, (err, measures)=>{
         if(err){
             console.log(err);
         }else{
             res.send(measures);
         }
-    }).sort({time:-1});
+    }).sort({time:-1}).limit(100);
 });
 
 
@@ -84,6 +86,7 @@ app.get('/devices/:owner',(req, res)=>{
 
 app.post('/devices',(req, res)=>{
     const _device = new Device(req.body);
+    console.log('posting new devices', _device);
     Device.create(_device,(err)=>{
         if(err){
             console.log('Error in devices route : ', err.message);
@@ -114,7 +117,6 @@ app.post('/users',(req, res)=>{
                         res.send(false);
                         return;
                     }
-                    res.send(true);
                     return;
                 });
             }
