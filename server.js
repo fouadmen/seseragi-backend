@@ -2,7 +2,7 @@
 const timeout =require('infinite-timeout');
 const mosca= require('mosca');
 const app = require('./http-server');
-const server = require('http').createServer(app);
+const server = require('https').createServer(app);
 const axios = require('axios');
 //const EvenEmitter = require('./EventEmitter');
 const webSocketServer = require('websocket').server;
