@@ -60,8 +60,8 @@ mqttServer.on('published', function(packet) {
     }
 });
 
-function setup() {
-    console.log('Mqtt server is up and running');
+function setup(param) {
+    console.log('Mqtt server is up and running', param);
 }
 
 function deleteMqttClient(clientId){
@@ -86,7 +86,7 @@ function updateDeviceState(deviceId, state){
 
 
 wsServer.on('request', function(request) {
-  console.log(' Received a new connection.');
+  console.log(' Received a new connection.',request);
   // TODO : accept only the requests from allowed origin
   const connection = request.accept(null, request.origin);
   const path = request.resourceURL.pathname;
