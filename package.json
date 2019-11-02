@@ -17,7 +17,8 @@
     "mongoose": "^5.7.7",
     "mosca": "^2.8.3",
     "websocket": "^1.0.30",
-    "webstorm": "^1.0.0"
+    "webstorm": "^1.0.0",
+    "ws": "latest"
   },
   "devDependencies": {
     "@types/express": "^4.17.1",

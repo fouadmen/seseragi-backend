@@ -5,16 +5,14 @@ const app = require('./http-server');
 const server = require('http').createServer(app);
 const axios = require('axios');
 //const EvenEmitter = require('./EventEmitter');
-const webSocketServer = require('websocket').server;
+const webSocketServer = require('ws').Server;
 const Device = require("./models/Devices");
 const port = process.env.PORT || 9000;
 // Maintains all active connections in this object
 console.log('port :', port);
 const wsClients = {};
 const mqttClients = {};
-const wsServer = new webSocketServer({
-    httpServer: server
-});
+const wsServer = new webSocketServer({server});
 
 server.listen(port,()=>{
     console.log(`http/ws server listening on ${port}`);
