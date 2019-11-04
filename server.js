@@ -4,15 +4,17 @@ const mosca= require('mosca');
 const app = require('./http-server');
 const server = require('http').createServer(app);
 const axios = require('axios');
-//const EvenEmitter = require('./EventEmitter');
-const webSocketServer = require('ws').Server;
+const webSocketServer = require('websocket').server;
 const Device = require("./models/Devices");
 const port = process.env.PORT || 9000;
 // Maintains all active connections in this object
 console.log('port :', port);
 const wsClients = {};
 const mqttClients = {};
-const wsServer = new webSocketServer({server});
+const wsServer = new webSocketServer({
+    onlyHttp:false,
+    httpServer: server
+});
 
 server.listen(port,()=>{
     console.log(`http/ws server listening on ${port}`);
@@ -82,6 +84,9 @@ function updateDeviceState(deviceId, state){
 }
 /*--------------------------------------------*/
 
+wsServer.on('connection', function () {
+    console.log('client connected');
+});
 
 wsServer.on('request', function(request) {
   console.log(' Received a new connection.',request);
