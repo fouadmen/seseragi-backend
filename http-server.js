@@ -51,19 +51,46 @@ app.get('/measures/:deviceId', (req,res)=>{
 app.get('/measures/:deviceId/:dataType', (req,res)=>{
     const _dataType = req.params.dataType.toLowerCase();
     const _deviceId = req.params.deviceId;
-    console.log('trying to get measures data for : ', _deviceId, _dataType);
-    Measure.find({client : _deviceId, type : _dataType}, (err, measures)=>{
-        if(err){
-            console.log(err);
-        }else{
-            res.send(measures);
-        }
-    }).sort({time:-1}).limit(100);
+    const _period = req.query;
+    console.log('trying to get measures data for : ', _deviceId, _dataType, typeof _period);
+    if(typeof _period === 'object' && Object.entries(_period).length===0){
+        Measure.find({client : _deviceId, type : _dataType}, (err, measures)=>{
+            if(err){
+                console.log(err);
+            }else{
+                res.send(measures);
+            }
+        }).sort({time:-1}).limit(1440);
+    }else if(_period.hasOwnProperty('from') && _period.hasOwnProperty('to')){
+        Measure.find({client : _deviceId, type : _dataType, time : {$gte: _period['from'], $lt: _period['to']}}, (err, measures)=>{
+            if(err){
+                console.log(err);
+            }else{
+                res.send(measures);
+            }
+        }).sort({time:-1});
+    } else if (_period.hasOwnProperty('from')){
+        Measure.find({client : _deviceId, type : _dataType, time : {$gte: _period['from']}}, (err, measures)=>{
+            if(err){
+                console.log(err);
+            }else{
+                res.send(measures);
+            }
+        }).sort({time:-1});
+    } else if (_period.hasOwnProperty('to')){
+        Measure.find({client : _deviceId, type : _dataType, time : {$lt: _period['to']}}, (err, measures)=>{
+            if(err){
+                console.log(err);
+            }else{
+                res.send(measures);
+            }
+        }).sort({time:-1});
+    } else {
+        //TODO: respond with proper code
+        res.send(false);
+    }
+
 });
-
-
-
-/*-------------------------------------------------------------------------------- */
 
 /*--------------------------- Devices routes ------------------------------------- */
 
