@@ -26,7 +26,7 @@ const moscaSettings = {
 const mqttServer = new mosca.Server(moscaSettings, setup);
 
 mqttServer.on('clientConnected', function(client) {
-    console.log('client ');
+    console.log('Device is connected : ', client.id);
     if(!mqttClients[client.id])
         mqttClients[client.id] = {clientId : client.id, timeout : timeout.set(()=>deleteMqttClient(client.id), 80000)};
     updateDeviceState(client.id, "connected");
@@ -85,11 +85,10 @@ function updateDeviceState(deviceId, state){
 /*--------------------------------------------*/
 
 wsServer.on('connection', function () {
-    console.log('client connected');
+    console.log('Client connected');
 });
 
 wsServer.on('request', function(request) {
-  console.log(' Received a new connection.',request);
   // TODO : accept only the requests from allowed origin
   const connection = request.accept(null, request.origin);
   const path = request.resourceURL.pathname;
@@ -148,8 +147,6 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
     };
     mqttServer.publish(packet, clientId, subCallback!==null ?
         function() {
-            //EvenEmitter.subscribe(subCallback.name,subCallback);
-            console.log(`MQTT broker message sent to ${clientId}`);
         }
         :
         ()=>{return;}
@@ -159,5 +156,5 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
 function statusChange(_data) {
     _data["event"] = "update";
     wsClients[_data.clientId].connection.send(JSON.stringify(_data));
-    console.log('message is sent');
+    console.log('Message is sent to connected client');
 }

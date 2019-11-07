@@ -52,44 +52,31 @@ app.get('/measures/:deviceId/:dataType', (req,res)=>{
     const _dataType = req.params.dataType.toLowerCase();
     const _deviceId = req.params.deviceId;
     const _period = req.query;
-    console.log('trying to get measures data for : ', _deviceId, _dataType, typeof _period);
-    if(typeof _period === 'object' && Object.entries(_period).length===0){
-        Measure.find({client : _deviceId, type : _dataType}, (err, measures)=>{
+    if(typeof _period === 'object'){
+        console.log('trying to get measures data for : ', _deviceId, _dataType,  _period);
+        let query = {client : _deviceId, type : _dataType};
+        const projection = {"_id":0, "value" : 1 , "time" : 1};
+        if(Object.entries(_period).length!==0){
+            if(_period.hasOwnProperty('from') && _period.hasOwnProperty('to')){
+                query.time= {$gte: _period['from'], $lt: _period['to']};
+            } else if (_period.hasOwnProperty('from')){
+                query.time= {$gte: _period['from']};
+            } else {
+                query.time= {$lt: _period['to']};
+            }
+        }
+        console.log(query)
+        Measure.find(query, projection, (err, measures)=>{
             if(err){
                 console.log(err);
             }else{
                 res.send(measures);
             }
         }).sort({time:-1}).limit(1440);
-    }else if(_period.hasOwnProperty('from') && _period.hasOwnProperty('to')){
-        Measure.find({client : _deviceId, type : _dataType, time : {$gte: _period['from'], $lt: _period['to']}}, (err, measures)=>{
-            if(err){
-                console.log(err);
-            }else{
-                res.send(measures);
-            }
-        }).sort({time:-1});
-    } else if (_period.hasOwnProperty('from')){
-        Measure.find({client : _deviceId, type : _dataType, time : {$gte: _period['from']}}, (err, measures)=>{
-            if(err){
-                console.log(err);
-            }else{
-                res.send(measures);
-            }
-        }).sort({time:-1});
-    } else if (_period.hasOwnProperty('to')){
-        Measure.find({client : _deviceId, type : _dataType, time : {$lt: _period['to']}}, (err, measures)=>{
-            if(err){
-                console.log(err);
-            }else{
-                res.send(measures);
-            }
-        }).sort({time:-1});
-    } else {
+    }else {
         //TODO: respond with proper code
         res.send(false);
     }
-
 });
 
 /*--------------------------- Devices routes ------------------------------------- */
