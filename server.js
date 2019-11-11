@@ -15,7 +15,7 @@ const wsServer = new webSocketServer({
     onlyHttp:false,
     httpServer: server
 });
-
+const inactivityTimeout = 70000;
 server.listen(port,()=>{
     console.log(`http/ws server listening on ${port}`);
 });
@@ -28,7 +28,7 @@ const mqttServer = new mosca.Server(moscaSettings, setup);
 mqttServer.on('clientConnected', function(client) {
     console.log('Device is connected : ', client.id);
     if(!mqttClients[client.id])
-        mqttClients[client.id] = {clientId : client.id, timeout : timeout.set(()=>deleteMqttClient(client.id), 80000)};
+        mqttClients[client.id] = {clientId : client.id, timeout : timeout.set(()=>deleteMqttClient(client.id), inactivityTimeout)};
     updateDeviceState(client.id, "connected");
 });
 
@@ -38,6 +38,7 @@ mqttServer.on('published', function(packet) {
     if(receivedData.topic === 'state'){
         const _data = JSON.parse(packet.payload.toString());
         timeout.clear(mqttClients[_data.clientId].timeout);
+        mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
         if(wsClients[_data.clientId]){
             statusChange(_data);
         }
@@ -45,6 +46,7 @@ mqttServer.on('published', function(packet) {
         const _data = JSON.parse(packet.payload.toString());
         let postRequests = [];
         timeout.clear(mqttClients[_data.clientId].timeout);
+        mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
         (Object.keys(_data.data)).forEach((dataType)=>{
             const _newMeasure = {
                 client: _data.clientId,
