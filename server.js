@@ -26,10 +26,7 @@ const moscaSettings = {
 const mqttServer = new mosca.Server(moscaSettings, setup);
 
 mqttServer.on('clientConnected', function(client) {
-    console.log('Device is connected : ', client.id);
-    if(!mqttClients[client.id])
-        mqttClients[client.id] = {clientId : client.id, timeout : timeout.set(()=>deleteMqttClient(client.id), inactivityTimeout)};
-    updateDeviceState(client.id, "connected");
+
 });
 
 mqttServer.on('published', function(packet) {
@@ -40,7 +37,7 @@ mqttServer.on('published', function(packet) {
         timeout.clear(mqttClients[_data.clientId].timeout);
         mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
         if(wsClients[_data.clientId]){
-            statusChange(_data);
+            statusChange("update", _data);
         }
     } else if (receivedData.topic ==='outTopic') {
         const _data = JSON.parse(packet.payload.toString());
@@ -59,6 +56,18 @@ mqttServer.on('published', function(packet) {
         axios.all(postRequests).catch(
             (err)=>console.log('Error while trying to post measures : ', err.message)
         )
+    } else if (RegExp('new/subscribes', 'g').exec(receivedData.topic)) {
+        const payload = JSON.parse(receivedData.payload);
+        console.log('Device is connected : ', payload.topic);
+        if(!mqttClients[payload.clientId])
+            mqttClients[payload.clientId] = {clientId : payload.clientId, timeout : timeout.set(()=>deleteMqttClient(payload.clientId), inactivityTimeout)};
+        if(payload.topic==='update/enable' && wsClients[payload.clientId]){
+            updateDeviceState(payload.clientId, "connected");
+            publishToClients(payload.clientId, 'update/enable', statusChange);
+        }
+    } else if (RegExp('disconnect/clients', 'g').exec(receivedData.topic)){
+        const payload = JSON.parse(receivedData.payload);
+        deleteMqttClient(payload.clientId);
     }
 });
 
@@ -67,8 +76,9 @@ function setup(param) {
 }
 
 function deleteMqttClient(clientId){
-    updateDeviceState(clientId, "disconnect");
+    timeout.clear(mqttClients[clientId].timeout);
     delete mqttClients[clientId];
+    updateDeviceState(clientId, "disconnect");
     console.log('Mqtt client has been deleted : ', clientId);
 }
 
@@ -80,6 +90,8 @@ function updateDeviceState(deviceId, state){
         (err)=>{
             if(err){
                 console.error('Error while updating device state : ', err);
+            }else{
+                statusChange('state', {clientId:deviceId, state:state});
             }
         }
     )
@@ -128,7 +140,6 @@ function handleRequest(message) {
     }
 }
 
-
 function deleteClient(clientID) {
     delete wsClients[clientID];
     return;
@@ -155,8 +166,11 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
     );
 }
 
-function statusChange(_data) {
-    _data["event"] = "update";
-    wsClients[_data.clientId].connection.send(JSON.stringify(_data));
-    console.log('Message is sent to connected client');
+function statusChange(event, _data) {
+    if(wsClients[_data.clientId]){
+        _data["event"] = event;
+        wsClients[_data.clientId].connection.send(JSON.stringify(_data));
+        console.log('Message is sent to connected client');
+    }
+
 }
