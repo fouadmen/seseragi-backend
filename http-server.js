@@ -85,15 +85,30 @@ app.get('/devices/:owner',(req, res)=>{
 });
 
 app.post('/devices',(req, res)=>{
-    const _device = new Device(req.body);
-    console.log('posting new devices', _device);
-    Device.create(_device,(err)=>{
-        if(err){
-            console.log('Error in devices route : ', err.message);
-            res.send(false);
-        }else{
-            res.send(true);
-        }
+    Device.find({"deviceId" : req.body.deviceId},(err, device)=>{
+       if(err){
+           res.send(false);
+       }else if(device){
+           console.log('exists : ', device);
+           Device.findOneAndUpdate({"deviceId" : req.body.deviceId}, req.body, {useFindAndModify:false, new:true}, (err, device)=>{
+               if(err){
+                   console.log('Error in devices route while updating new document : ', err.message);
+                   res.send(false);
+               } else {
+                   res.send(true);
+               }
+           });
+       }else{
+           const _device = new Device(req.body);
+           Device.create(_device,(err)=>{
+               if(err){
+                   console.log('Error in devices route while creating new document : ', err.message);
+                   res.send(false);
+               }else{
+                   res.send(true);
+               }
+           });
+       }
     });
 });
 
