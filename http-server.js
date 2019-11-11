@@ -88,7 +88,7 @@ app.post('/devices',(req, res)=>{
     Device.find({"deviceId" : req.body.deviceId},(err, device)=>{
        if(err){
            res.send(false);
-       }else if(device){
+       }else if(device!== undefined && device.length>0){
            console.log('exists : ', device);
            Device.findOneAndUpdate({"deviceId" : req.body.deviceId}, req.body, {useFindAndModify:false, new:true}, (err, device)=>{
                if(err){
