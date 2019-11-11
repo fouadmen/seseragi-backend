@@ -26,7 +26,7 @@ const moscaSettings = {
 const mqttServer = new mosca.Server(moscaSettings, setup);
 
 mqttServer.on('clientConnected', function(client) {
-
+    console.log('new device is connected : ', client.id);
 });
 
 mqttServer.on('published', function(packet) {
@@ -58,7 +58,6 @@ mqttServer.on('published', function(packet) {
         )
     } else if (RegExp('new/subscribes', 'g').exec(receivedData.topic)) {
         const payload = JSON.parse(receivedData.payload);
-        console.log('Device is connected : ', payload.topic);
         if(!mqttClients[payload.clientId])
             mqttClients[payload.clientId] = {clientId : payload.clientId, timeout : timeout.set(()=>deleteMqttClient(payload.clientId), inactivityTimeout)};
         if(payload.topic==='update/enable' && wsClients[payload.clientId]){
@@ -170,7 +169,7 @@ function statusChange(event, _data) {
     if(wsClients[_data.clientId]){
         _data["event"] = event;
         wsClients[_data.clientId].connection.send(JSON.stringify(_data));
-        console.log('Message is sent to connected client');
+        console.log('Message is sent to connected client : ', _data.clientId);
     }
 
 }
