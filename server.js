@@ -70,8 +70,8 @@ mqttServer.on('published', function(packet) {
     }
 });
 
-function setup(param) {
-    console.log('Mqtt server is up and running', param);
+function setup() {
+    console.log('Mqtt server is up and running');
 }
 
 function deleteMqttClient(clientId){
@@ -114,14 +114,24 @@ wsServer.on('request', function(request) {
 
 function handleConnection(connection, query) {
     let clientID = query._clientId;
-    connection.on('close', ()=>closeHandler(clientID));
+    const connectionId = '_'+Math.random().toString(36).substr(2,9);
+    console.log(`client : ${connectionId} is connected`);
+    connection.on('close', ()=>closeHandler(clientID, connectionId));
     connection.on('message', (message)=>handleRequest(message));
     if(!wsClients[clientID]){
-        wsClients[clientID] = {
+        console.log(`first client`);
+        wsClients[clientID] = [{
             connection : connection,
             connected : true,
-            // timeout : timeout.set(()=>deleteClient(clientID), NO_ACTIVITY_TIMEOUT)
-        };
+            connectionId : connectionId
+        }];
+    }else{
+        console.log(`adding other client to the same device`);
+        wsClients[clientID].push({
+            connection : connection,
+            connected : true,
+            connectionId : connectionId
+        });
     }
 }
 
@@ -133,21 +143,24 @@ function handleRequest(message) {
                 publishToClients(request.target, 'update/enable', statusChange);
                 break;
             case 'control':
+                console.log('received control');
                 publishToClients(request.target, 'control', null,request.param);
                 break;
         }
     }
 }
 
-function deleteClient(clientID) {
-    delete wsClients[clientID];
-    return;
+function closeHandler(clientID, connectionId) {
+    if(wsClients[clientID].length===1){
+        publishToClients(clientID, 'update/disable');
+    }
+
+    deleteClient(clientID, connectionId);
+    console.log("connection closed for client : " + connectionId + " of " + clientID);
 }
 
-function closeHandler(clientID) {
-    publishToClients(clientID, 'update/disable');
-    deleteClient(clientID);
-    console.log("connection closed for client : " + clientID);
+function deleteClient(clientID, connectionId) {
+    wsClients[clientID] = wsClients[clientID].filter(client => client.connectionId !== connectionId);
 }
 
 function publishToClients(clientId, topic, subCallback=null, payload = null) {
@@ -168,8 +181,9 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
 function statusChange(event, _data) {
     if(wsClients[_data.clientId]){
         _data["event"] = event;
-        wsClients[_data.clientId].connection.send(JSON.stringify(_data));
-        console.log('Message is sent to connected client : ', _data.clientId);
+        wsClients[_data.clientId].forEach((client)=>{
+            client.connection.send(JSON.stringify(_data));
+            console.log('Message is sent to connected client : ', _data.clientId);
+        });
     }
-
 }
