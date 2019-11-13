@@ -27,7 +27,10 @@ const mqttServer = new mosca.Server(moscaSettings, setup);
 
 mqttServer.on('clientConnected', function(client) {
     console.log('new device is connected : ', client.id);
+    updateDeviceState(payload.clientId, "connected");
 });
+
+
 
 mqttServer.on('published', function(packet) {
     //TODO: handle case when two clients want to reach the same device !
@@ -61,11 +64,10 @@ mqttServer.on('published', function(packet) {
         if(!mqttClients[payload.clientId])
             mqttClients[payload.clientId] = {clientId : payload.clientId, timeout : timeout.set(()=>deleteMqttClient(payload.clientId), inactivityTimeout)};
         if(payload.topic==='update/enable' && wsClients[payload.clientId]){
-            updateDeviceState(payload.clientId, "connected");
             publishToClients(payload.clientId, 'update/enable', statusChange);
         }
     } else if (RegExp('disconnect/clients', 'g').exec(receivedData.topic)){
-        const payload = JSON.parse(receivedData.payload);
+        const payload = receivedData.payload;
         deleteMqttClient(payload.clientId);
     }
 });
@@ -75,10 +77,12 @@ function setup() {
 }
 
 function deleteMqttClient(clientId){
-    timeout.clear(mqttClients[clientId].timeout);
-    delete mqttClients[clientId];
-    updateDeviceState(clientId, "disconnect");
-    console.log('Mqtt client has been deleted : ', clientId);
+    if(mqttClients[clientId]){
+        timeout.clear(mqttClients[clientId].timeout);
+        delete mqttClients[clientId];
+        updateDeviceState(clientId, "disconnect");
+        console.log('Mqtt client has been deleted : ', clientId);
+    }
 }
 
 function updateDeviceState(deviceId, state){
@@ -183,7 +187,7 @@ function statusChange(event, _data) {
         _data["event"] = event;
         wsClients[_data.clientId].forEach((client)=>{
             client.connection.send(JSON.stringify(_data));
-            console.log('Message is sent to connected client : ', _data.clientId);
+            console.log('Message is sent to connected clients : ', _data.clientId);
         });
     }
 }

@@ -11,7 +11,19 @@ const DeviceSchema = new mongoose.Schema({
     name: String,
     time: String,
     state:String,
-    owner: String,
+    owner: [
+        {
+            type: mongoose.Schema.Types.String,
+            ref:'user'
+        }
+    ],
+    measure:[
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref:'measure'
+        }
+    ]
+
 });
 
 module.exports = mongoose.model('Device', DeviceSchema);

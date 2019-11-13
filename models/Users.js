@@ -10,6 +10,12 @@ const UserSchema = new mongoose.Schema({
     userId: String,
     password: String,
     role: String,
+    device: [
+        {
+            type: mongoose.Schema.Types.String,
+            ref: 'device'
+        }
+    ]
 });
 
 module.exports = mongoose.model('User', UserSchema);

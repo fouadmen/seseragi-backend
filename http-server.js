@@ -85,29 +85,36 @@ app.get('/devices/:owner',(req, res)=>{
 });
 
 app.post('/devices',(req, res)=>{
-    Device.find({"deviceId" : req.body.deviceId},(err, device)=>{
+    Device.findOne({"deviceId" : req.body.deviceId},(err, device)=>{
        if(err){
            res.send(false);
-       }else if(device!== undefined && device.length>0){
-           console.log('exists : ', device);
-           Device.findOneAndUpdate({"deviceId" : req.body.deviceId}, req.body, {useFindAndModify:false, new:true}, (err, device)=>{
-               if(err){
-                   console.log('Error in devices route while updating new document : ', err.message);
-                   res.send(false);
-               } else {
-                   res.send(true);
-               }
-           });
        }else{
-           const _device = new Device(req.body);
-           Device.create(_device,(err)=>{
-               if(err){
-                   console.log('Error in devices route while creating new document : ', err.message);
-                   res.send(false);
-               }else{
-                   res.send(true);
-               }
-           });
+           if(!device){
+               let {owner, ...data} = req.body;
+               User.findOne({"userId": owner},(err, user)=>{
+                   if(err){
+                       console.log(err);
+                       res.send(false);//User does not exist yet
+                   }else{
+                       const _device = new Device(data);
+                       Device.create(_device,(err, device)=>{
+                           if(err){
+                               console.log('Error in devices route while creating new document : ', err.message);
+                               res.send(false);
+                           }else{
+                               device.owner.push(user.userId);
+                               device.save();
+                               user.device.push(device.deviceId);
+                               user.save();
+                               res.send(true);
+                           }
+                       });
+                   }
+               });
+           }else{
+               console.warn('device already exists');
+               res.send(false);
+           }
        }
     });
 });
@@ -115,8 +122,6 @@ app.post('/devices',(req, res)=>{
 app.put('/devices/:id',(req, res)=>{
     const deviceId = req.params.id;
     const device = req.body;
-    console.log(deviceId);
-    console.log(device);
     Device.findOneAndUpdate({"deviceId" : deviceId}, {$set: device}, {useFindAndModify:false, new:true}, (err, device)=>{
        if(err){
            res.send(false);
@@ -167,7 +172,6 @@ app.post('/users',(req, res)=>{
                         res.send(false);
                         return;
                     }
-
                 });
             }
             res.send(true);
