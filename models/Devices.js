@@ -11,16 +11,10 @@ const DeviceSchema = new mongoose.Schema({
     name: String,
     time: String,
     state:String,
-    owner: [
+    owners: [
         {
             type: mongoose.Schema.Types.String,
             ref:'user'
-        }
-    ],
-    measure:[
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref:'measure'
         }
     ]
 

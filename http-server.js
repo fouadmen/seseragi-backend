@@ -44,7 +44,7 @@ app.get('/measures/:deviceId/:dataType', (req,res)=>{
     const _period = req.query;
     if(typeof _period === 'object'){
         let query = {client : _deviceId, type : _dataType};
-        const projection = {"_id":0, "value" : 1 , "time" : 1};
+        const projection = {"_id":0, "value" : 1 , "time" : 1, "type": 1};
         if(Object.keys(_period).length!==0){
             if(_period.hasOwnProperty('from') && _period.hasOwnProperty('to')){
                 query.time= {$gte: _period['from'], $lt: _period['to']};
@@ -70,16 +70,41 @@ app.get('/measures/:deviceId/:dataType', (req,res)=>{
 /*--------------------------- Devices routes ------------------------------------- */
 app.get('/devices/:owner',(req, res)=>{
     const _owner = req.params.owner;
-    Device.find({owner : _owner},(err, devices)=>{
+    Device.find({ owners: { $all: [_owner] } }, async (err, devices)=>{
         if(err){
             console.log('Error in devices route : ', err.message);
             res.send(false);
         }else{
             let _devices = [];
-            devices.forEach((device)=>{
-                _devices.push({deviceId:device.deviceId, isConnected: device.state === 'connected', name : device.name});
+            let promises = [];
+            for (let i =0; i<devices.length; i++){
+                promises.push(new Promise((resolve, reject)=>{
+                    let tmpDevice = {
+                        deviceId:devices[i].deviceId,
+                        isConnected: devices[i].state === 'connected',
+                        name : devices[i].name,
+                        owners: ''
+                    };
+                    User.find({userId : {$in : devices[i].owners}},{"_id":0, "userId" : 1 , "role" : 1},(err, owners)=>{
+                        if(err || !owners){
+                            console.error(err);
+                            reject(err ? err : 'No owner');
+                        }else{
+                            tmpDevice.owners = owners;
+                            _devices.push(tmpDevice);
+                            resolve(_devices);
+                        }
+                    });
+                }))
+            }
+
+            await Promise.all(promises).then(()=>{
+                res.send(_devices);
+            }).catch((error)=>{
+                console.error(error);
+                res.send(error);
             });
-            res.send(_devices);
+
         }
     });
 });
@@ -92,9 +117,9 @@ app.post('/devices',(req, res)=>{
            if(!device){
                let {owner, ...data} = req.body;
                User.findOne({"userId": owner},(err, user)=>{
-                   if(err){
-                       console.log(err);
-                       res.send(false);//User does not exist yet
+                   if(err || !user){
+                       console.log(err ? err : 'Unknown user');
+                       res.send(err ? err : 'Unknown user');
                    }else{
                        const _device = new Device(data);
                        Device.create(_device,(err, device)=>{
@@ -102,11 +127,14 @@ app.post('/devices',(req, res)=>{
                                console.log('Error in devices route while creating new document : ', err.message);
                                res.send(false);
                            }else{
-                               device.owner.push(user.userId);
-                               device.save();
+                               device.owners.push(user.userId);
                                user.device.push(device.deviceId);
-                               user.save();
-                               res.send(true);
+                               Promise.all([device.save(),  user.save()]).then(()=>{
+                                   res.send(device);
+                               }).catch((err)=>{
+                                  console.error(err);
+                                  res.send(false);
+                               });
                            }
                        });
                    }
@@ -121,23 +149,47 @@ app.post('/devices',(req, res)=>{
 
 app.put('/devices/:id',(req, res)=>{
     const deviceId = req.params.id;
-    const device = req.body;
-    Device.findOneAndUpdate({"deviceId" : deviceId}, {$set: device}, {useFindAndModify:false, new:true}, (err, device)=>{
+    const query = req.body;
+    console.warn('Device PUT', query, deviceId);
+    Device.findOneAndUpdate({"deviceId" : deviceId}, {$set: query}, {useFindAndModify:false, new:true}, (err, device)=>{
        if(err){
            res.send(false);
        } else {
-           console.log(device);
-           res.send(true);
+
+           let tmpDevice = {
+               deviceId:device.deviceId,
+               isConnected: device.state === 'connected',
+               name : device.name,
+               owners: ''
+           };
+
+           User.find({userId : {$in : device.owners}},{"_id":0, "userId" : 1 , "role" : 1},(err, owners)=>{
+               if(err || !owners){
+                   console.error(err);
+               }else{
+                   tmpDevice.owners = owners;
+                   res.send(tmpDevice);
+               }
+           });
        }
     });
 });
 
 app.delete('/devices/:id',(req, res)=>{
     const deviceId = req.params.id;
-    Device.findOneAndRemove({"deviceId" : deviceId},{useFindAndModify:false}, (err)=>{
-        if(err){
+    Device.findOneAndRemove({"deviceId" : deviceId},{useFindAndModify:false}, (err, device)=>{
+        if(err || !device){
             res.send(false);
         }else{
+            device.owners.forEach((userId)=>{
+               User.findOne({"userId" : userId}, (err, user)=>{
+                   if(!user){
+                       console.error(err);
+                   }else{
+                       user.device.pop(device.deviceId);
+                   }
+               });
+            });
             res.send(true);
         }
     });
@@ -184,30 +236,79 @@ app.put('/users/:id',(req, res)=>{
     const user = req.body;
     console.log(userId);
     console.log(user);
-    Device.findOneAndUpdate({"userId" : userId}, {$set: user}, {useFindAndModify:false}, (err, device)=>{
-        if(err){
-            res.send(false);
-        } else {
-            console.log(device);
-            res.send(true);
-        }
-    });
+    const query = req.body.hasOwnProperty("devices");
+    if(query){
+        console.log(true);
+        console.log(req.body.devices);
+        User.findOne({"userId" : userId}, {useFindAndModify:false}, (err, user)=>{
+            if(err || !user){
+                console.error(err);
+                res.send(false);
+                return;
+            } else {
+                Device.find({deviceId:{$in : req.body.devices}},(err, devices)=>{
+                    if(err || !devices){
+                        console.error(err);
+                        res.send(false);
+                    }else{
+                        devices.forEach((device)=>{
+                            console.log('--------');
+                            console.log(device.owners.includes(user.userId) );
+                            console.log(user.device.includes(device.deviceId));
+                            console.log('--------');
+                            if(!device.owners.includes(user.userId) && !user.device.includes(device.deviceId)){
+                                device.owners.push(user.userId);
+                                user.device.push(device.deviceId);
+                                device.save().catch((err)=>{
+                                    console.error(err);
+                                    res.send(err);
+                                    return;
+                                });
+                            }
+                        });
+                        user.save().then(()=>res.send(true));
+                    }
+                });
+            }
+        });
+    }else{
+        console.log(false);
+        User.findOneAndUpdate({"userId" : userId},{$set : req.body}, {useFindAndModify:false}, (err, user)=>{
+            if(err){
+                res.send(false);
+            } else {
+                console.log(user);
+                res.send(true);
+            }
+        });
+    }
 });
 
 app.delete('/users/:id',(req, res)=>{
     const userId = req.params.id;
-    Device.findOneAndRemove({"userId" : userId},{useFindAndModify:false}, (err)=>{
+    User.findOneAndRemove({"userId" : userId},{useFindAndModify:false}, (err, user)=>{
         if(err){
             res.send(false);
         }else{
-            res.send(true);
+            Device.find({owners:{$all : [user.userId]}},(err, devices)=>{
+                if(err || !devices){
+                    console.error(err);
+                    res.send(false);
+                }else{
+                    devices.forEach((device)=>{
+                        device.owners.pop(user.userId);
+                        device.save().catch((err)=>{
+                            console.error(err);
+                            res.send(false);
+                            return;
+                        });
+                    });
+                    res.send(true);
+                }
+            });
         }
     });
 });
-
-
-
-
 
 /*-------------------------------------------------------------------------------- */
 module.exports = app;
