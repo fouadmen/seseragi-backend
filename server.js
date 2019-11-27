@@ -1,4 +1,3 @@
-//TODO: this can be used to handle connection inactivity const timeout = require('infinite-timeout'); const NO_ACTIVITY_TIMEOUT = 20000;
 const timeout =require('infinite-timeout');
 const mosca= require('mosca');
 const app = require('./http-server');
@@ -27,7 +26,7 @@ const mqttServer = new mosca.Server(moscaSettings, setup);
 
 mqttServer.on('clientConnected', function(client) {
     console.log('new device is connected : ', client.id);
-    updateDeviceState(payload.clientId, "connected");
+    updateDeviceState(client.id, "connected");
 });
 
 
@@ -123,7 +122,6 @@ function handleConnection(connection, query) {
     connection.on('close', ()=>closeHandler(clientID, connectionId));
     connection.on('message', (message)=>handleRequest(message));
     if(!wsClients[clientID]){
-        console.log(`first client`);
         wsClients[clientID] = [{
             connection : connection,
             connected : true,

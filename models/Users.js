@@ -9,6 +9,8 @@ mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:tru
 const UserSchema = new mongoose.Schema({
     userId: String,
     password: String,
+    thumbnail: String,
+    name: String,
     role: String,
     device: [
         {

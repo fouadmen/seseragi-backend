@@ -85,7 +85,7 @@ app.get('/devices/:owner',(req, res)=>{
                         name : devices[i].name,
                         owners: ''
                     };
-                    User.find({userId : {$in : devices[i].owners}},{"_id":0, "userId" : 1 , "role" : 1},(err, owners)=>{
+                    User.find({userId : {$in : devices[i].owners}},{"_id":0, "userId" : 1 , "role" : 1, "thumbnail" : 1, "name": 1, "device":1},(err, owners)=>{
                         if(err || !owners){
                             console.error(err);
                             reject(err ? err : 'No owner');
@@ -153,24 +153,52 @@ app.put('/devices/:id',(req, res)=>{
     console.warn('Device PUT', query, deviceId);
     Device.findOneAndUpdate({"deviceId" : deviceId}, {$set: query}, {useFindAndModify:false, new:true}, (err, device)=>{
        if(err){
+           console.error(err);
            res.send(false);
        } else {
+           if(query.hasOwnProperty('owners')){
+               console.log(device.deviceId);
+               User.findOneAndUpdate({userId : {$nin : device.owners}, device:{$all : [device.deviceId]}},{$pull : {device : device.deviceId}},{useFindAndModify:false},(err, user)=>{
+                   if(err){
+                       res.send(false);
+                       console.error(err);
+                   }else{
+                       let tmpDevice = {
+                           deviceId:device.deviceId,
+                           isConnected: device.state === 'connected',
+                           name : device.name,
+                           owners: ''
+                       };
 
-           let tmpDevice = {
-               deviceId:device.deviceId,
-               isConnected: device.state === 'connected',
-               name : device.name,
-               owners: ''
-           };
+                       User.find({userId : {$in : device.owners}},{"_id":0, "userId" : 1 , "role" : 1, "thumbnail" : 1, "name": 1},(err, owners)=>{
+                           if(err || !owners){
+                               res.send(false);
+                               console.error(err);
+                           }else{
+                               tmpDevice.owners = owners;
+                               res.send([tmpDevice]);
+                           }
+                       });
+                   }
+               })
+           }else{
+               let tmpDevice = {
+                   deviceId:device.deviceId,
+                   isConnected: device.state === 'connected',
+                   name : device.name,
+                   owners: ''
+               };
 
-           User.find({userId : {$in : device.owners}},{"_id":0, "userId" : 1 , "role" : 1},(err, owners)=>{
-               if(err || !owners){
-                   console.error(err);
-               }else{
-                   tmpDevice.owners = owners;
-                   res.send(tmpDevice);
-               }
-           });
+               User.find({userId : {$in : device.owners}},{"_id":0, "userId" : 1 , "role" : 1, "thumbnail" : 1, "name": 1},(err, owners)=>{
+                   if(err || !owners){
+                       res.send(false);
+                       console.error(err);
+                   }else{
+                       tmpDevice.owners = owners;
+                       res.send([tmpDevice]);
+                   }
+               });
+           }
        }
     });
 });
@@ -223,10 +251,14 @@ app.post('/users',(req, res)=>{
                         console.error('Error while creating new user');
                         res.send(false);
                         return;
+                    }else{
+                        res.send(true);
                     }
                 });
+            }else{
+                res.send(true);
             }
-            res.send(true);
+
         }
     });
 });
@@ -243,7 +275,7 @@ app.put('/users/:id',(req, res)=>{
         User.findOne({"userId" : userId}, {useFindAndModify:false}, (err, user)=>{
             if(err || !user){
                 console.error(err);
-                res.send(false);
+                res.send(err ? err : 'This user does not exit');
                 return;
             } else {
                 Device.find({deviceId:{$in : req.body.devices}},(err, devices)=>{
@@ -272,7 +304,6 @@ app.put('/users/:id',(req, res)=>{
             }
         });
     }else{
-        console.log(false);
         User.findOneAndUpdate({"userId" : userId},{$set : req.body}, {useFindAndModify:false}, (err, user)=>{
             if(err){
                 res.send(false);
