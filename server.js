@@ -36,7 +36,8 @@ mqttServer.on('published', function(packet) {
     const receivedData = packet;
     if(receivedData.topic === 'state'){
         const _data = JSON.parse(packet.payload.toString());
-        timeout.clear(mqttClients[_data.clientId].timeout);
+        if(mqttClients[_data.clientId])
+            timeout.clear(mqttClients[_data.clientId].timeout);
         mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
         if(wsClients[_data.clientId]){
             statusChange("update", _data);
@@ -44,7 +45,8 @@ mqttServer.on('published', function(packet) {
     } else if (receivedData.topic ==='outTopic') {
         const _data = JSON.parse(packet.payload.toString());
         let postRequests = [];
-        timeout.clear(mqttClients[_data.clientId].timeout);
+        if(mqttClients[_data.clientId])
+            timeout.clear(mqttClients[_data.clientId].timeout);
         mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
         (Object.keys(_data.data)).forEach((dataType)=>{
             const _newMeasure = {
