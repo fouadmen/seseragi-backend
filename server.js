@@ -128,7 +128,6 @@ function handleConnection(connection, query) {
             connectionId : connectionId
         }];
     }else{
-        console.log(`adding other client to the same device`);
         wsClients[clientID].push({
             connection : connection,
             connected : true,

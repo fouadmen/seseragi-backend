@@ -157,7 +157,6 @@ app.put('/devices/:id',(req, res)=>{
            res.send(false);
        } else {
            if(query.hasOwnProperty('owners')){
-               console.log(device.deviceId);
                User.findOneAndUpdate({userId : {$nin : device.owners}, device:{$all : [device.deviceId]}},{$pull : {device : device.deviceId}},{useFindAndModify:false},(err, user)=>{
                    if(err){
                        res.send(false);
@@ -237,7 +236,7 @@ app.get('/users',(req, res)=>{
 });
 
 app.post('/users',(req, res)=>{
-    console.log(req.body.userId);
+    console.log('USERS POST ID : ', req.body.userId);
     User.find({userId : req.body.userId},(err, user)=>{
         if(err){
             console.error('Error while searching for user');
