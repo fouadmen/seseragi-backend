@@ -60,7 +60,7 @@ app.get('/measures/:deviceId/:dataType', (req,res)=>{
             }else{
                 res.send(measures);
             }
-        }).sort({time:-1}).limit(1440);
+        }).sort({time:-1});
     }else {
         //TODO: respond with proper code
         res.send(false);
