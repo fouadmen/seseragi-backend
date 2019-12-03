@@ -123,19 +123,25 @@ function handleConnection(connection, query) {
     console.log(`client : ${connectionId} is connected`);
     connection.on('close', ()=>closeHandler(clientID, connectionId));
     connection.on('message', (message)=>handleRequest(message));
-    if(!wsClients[clientID]){
-        wsClients[clientID] = [{
-            connection : connection,
-            connected : true,
-            connectionId : connectionId
-        }];
-    }else{
-        wsClients[clientID].push({
-            connection : connection,
-            connected : true,
-            connectionId : connectionId
+
+    axios.get(`http://localhost:9000/devices/${clientID}`).then((devices)=>{
+
+        devices.data.forEach((d)=> {
+            if(!wsClients[d.deviceId]){
+                wsClients[d.deviceId] = [{
+                    connection : connection,
+                    connected : true,
+                    connectionId : connectionId
+                }];
+            }else{
+                wsClients[d.deviceId].push({
+                    connection : connection,
+                    connected : true,
+                    connectionId : connectionId
+                });
+            }
         });
-    }
+    })
 }
 
 function handleRequest(message) {
@@ -173,6 +179,7 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
         qos: 2,
         retain: false,
     };
+    console.table(packet);
     mqttServer.publish(packet, clientId, subCallback!==null ?
         function() {
         }
@@ -182,7 +189,7 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
 }
 
 function statusChange(event, _data) {
-    if(wsClients[_data.clientId]){
+    if(wsClients[_data.clientId]) {
         _data["event"] = event;
         wsClients[_data.clientId].forEach((client)=>{
             client.connection.send(JSON.stringify(_data));
