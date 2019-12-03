@@ -160,16 +160,15 @@ function handleRequest(message) {
 }
 
 function closeHandler(clientID, connectionId) {
-    if(wsClients[clientID].length===1){
-        publishToClients(clientID, 'update/disable');
-    }
-
-    deleteClient(clientID, connectionId);
-    console.log("connection closed for client : " + connectionId + " of " + clientID);
-}
-
-function deleteClient(clientID, connectionId) {
-    wsClients[clientID] = wsClients[clientID].filter(client => client.connectionId !== connectionId);
+    axios.get(`http://localhost:9000/devices/${clientID}`).then((response)=>{
+        response.data.forEach((deviceId)=>{
+            if(wsClients[deviceId].length===1){
+                publishToClients(clientID, 'update/disable');
+            }
+            wsClients[deviceId] = wsClients[deviceId].filter(client => client.connectionId !== connectionId);
+        });
+        console.log("connection closed for client : " + connectionId + " of " + clientID);
+    });
 }
 
 function publishToClients(clientId, topic, subCallback=null, payload = null) {
