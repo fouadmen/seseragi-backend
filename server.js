@@ -152,7 +152,6 @@ function handleRequest(message) {
                 publishToClients(request.target, 'update/enable', statusChange);
                 break;
             case 'control':
-                console.log('received control');
                 publishToClients(request.target, 'control', null,request.param);
                 break;
         }
@@ -161,11 +160,11 @@ function handleRequest(message) {
 
 function closeHandler(clientID, connectionId) {
     axios.get(`http://localhost:9000/devices/${clientID}`).then((response)=>{
-        response.data.forEach((deviceId)=>{
-            if(wsClients[deviceId].length===1){
+        response.data.forEach((device)=>{
+            if(wsClients[device.deviceId].length===1){
                 publishToClients(clientID, 'update/disable');
             }
-            wsClients[deviceId] = wsClients[deviceId].filter(client => client.connectionId !== connectionId);
+            wsClients[device.deviceId] = wsClients[device.deviceId].filter(client => client.connectionId !== connectionId);
         });
         console.log("connection closed for client : " + connectionId + " of " + clientID);
     });
