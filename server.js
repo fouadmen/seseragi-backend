@@ -32,7 +32,6 @@ mqttServer.on('clientConnected', function(client) {
 
 
 mqttServer.on('published', function(packet) {
-    //TODO: handle case when two clients want to reach the same device !
     const receivedData = packet;
     if(receivedData.topic === 'state'){
         const _data = JSON.parse(packet.payload.toString());
@@ -177,7 +176,6 @@ function publishToClients(clientId, topic, subCallback=null, payload = null) {
         qos: 2,
         retain: false,
     };
-    console.table(packet);
     mqttServer.publish(packet, clientId, subCallback!==null ?
         function() {
         }

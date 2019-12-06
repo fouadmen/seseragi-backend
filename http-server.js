@@ -44,7 +44,7 @@ app.get('/measures/:deviceId/:dataType', (req,res)=>{
     const _period = req.query;
     if(typeof _period === 'object'){
         let query = {client : _deviceId, type : _dataType};
-        const projection = {"_id":0, "value" : 1 , "time" : 1, "type": 1};
+        const projection = {"_id":0, "value" : 1 , "time" : 1};
         if(Object.keys(_period).length!==0){
             if(_period.hasOwnProperty('from') && _period.hasOwnProperty('to')){
                 query.time= {$gte: _period['from'], $lt: _period['to']};
