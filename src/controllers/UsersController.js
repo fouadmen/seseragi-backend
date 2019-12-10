@@ -1,5 +1,4 @@
 const User = require('../models/Users');
-const Device = require('../models/Devices');
 const UsersService = require('../services/UsersService');
 // @TODO : Create Logger
 module.exports = {
