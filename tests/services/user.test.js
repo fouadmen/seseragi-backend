@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Users = require('../../src/models/Users');
 const UsersService = require('../../src/services/UsersService');
 const connectionString = 'mongodb://localhost:27017/SeseragiDB';
 
@@ -19,16 +20,26 @@ const validUserId = "test@gmail.com";
 
 const invalidUserId= "notest@gmail.com";
 
-const dataToModify = { "devices" : ["B4:E6:2D:99:7B:94", "B4:E6:2D:99:7B:74"] }
+const dataToModify = { "devices" : ["B4:E6:2D:99:7B:94", "B4:E6:2D:99:7B:74"] };
+
+function initializeUserDatabase(){
+    return Promise.resolve(Users.deleteOne({"userId" : validUserId}));
+}
 
 describe('User Sign In test', function () {
     beforeAll(async ()=>{
-        await mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:true},(err)=>{
+        await mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:true, useCreateIndex:true, useFindAndModify:false},(err)=>{
             if (err) {
                 console.error(err);
                 process.exit(1);
             }
         });
+
+        await initializeUserDatabase();
+    });
+
+    afterAll((done) => {
+        mongoose.disconnect(done);
     });
 
     it("Create and save valid user",async ()=>{
