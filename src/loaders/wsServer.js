@@ -1,13 +1,12 @@
-const app = require('./express');
-const server = require('http').createServer(app);
 const webSocketServer = require('websocket').server;
-const port = process.env.PORT || 9000;
+const wsController = require('../controllers/wsController');
 
-server.listen(port,()=>{
-    console.log(`http/ws server listening on ${port}`);
-});
+module.exports = ({app})=>{
+    const server = require('http').createServer(app);
+    const wsServer = new webSocketServer({ onlyHttp:false, httpServer: server });
 
-module.exports = new webSocketServer({
-    onlyHttp:false,
-    httpServer: server
-});
+    wsServer.on('request', wsController.requestHandler);
+    wsServer.on('connection', wsController.connectionHandler);
+
+    return server;
+};
