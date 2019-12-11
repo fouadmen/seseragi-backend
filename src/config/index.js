@@ -1,5 +1,5 @@
 module.exports = {
-    port : 2222,
+    port : 9000,
     api: {
         prefix: '/',
     }
