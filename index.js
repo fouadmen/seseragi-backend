@@ -11,7 +11,6 @@ async function startServer() {
         if(err){
             console.error(err);
             process.exit(1);
-            return;
         }else{
             console.info("Server is listening on ", config.port);
         }
