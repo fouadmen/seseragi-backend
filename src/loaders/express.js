@@ -11,7 +11,7 @@ module.exports = ({app})=>{
         res.status(200).send('OK !');
     });
 
-    app.use(config.api, routes());
+    app.use('/', routes());
 
     return app;
 };
