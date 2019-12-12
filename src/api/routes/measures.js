@@ -5,7 +5,7 @@ const router = express.Router();
 module.exports = (app)=>{
     //TODO: only known origin devices can insert and fetch data
 
-    router.get('/', MeasuresController.getMeasures);
+    router.get('/:deviceId/:dataType', MeasuresController.getMeasures);
 
     router.post('/', MeasuresController.createMeasure);
 

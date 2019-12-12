@@ -16,7 +16,6 @@ function statusChange(event, _data){
         _data["event"] = event;
         clients.wsClients[_data.clientId].forEach((client)=>{
             client.connection.send(JSON.stringify(_data));
-            console.log('Message is sent to connected clients : ', _data.clientId);
         });
     }
 }
