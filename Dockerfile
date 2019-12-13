@@ -1,12 +1,8 @@
-FROM node:12.13.1-stretch
+FROM node:12
 
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/backend
-
-WORKDIR /home/node/backend
+WORKDIR /app
 
 COPY package*.json ./
-
-USER node
 
 RUN npm install
 

@@ -37,11 +37,11 @@ describe('Device services test', function () {
             }
         });
 
-        await initializeDeviceDatabase();
     });
 
-    afterAll((done) => {
-        mongoose.disconnect(done);
+    afterAll(async (done) => {
+        await initializeDeviceDatabase();
+        await mongoose.disconnect(done);
     });
 
     it("Should create and save a valid device",async ()=>{

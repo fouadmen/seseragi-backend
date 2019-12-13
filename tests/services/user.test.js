@@ -35,11 +35,11 @@ describe('User Sign In test', function () {
             }
         });
 
-        await initializeUserDatabase();
     });
 
-    afterAll((done) => {
-        mongoose.disconnect(done);
+    afterAll(async (done) => {
+        await initializeUserDatabase();
+        await mongoose.disconnect(done);
     });
 
     it("Create and save valid user",async ()=>{

@@ -35,11 +35,12 @@ describe('Device services test', function () {
             }
         });
 
-        await initializeMeasureDatabase();
+
     });
 
-    afterAll((done) => {
-        mongoose.disconnect(done);
+    afterAll(async (done) => {
+        await initializeMeasureDatabase();
+        await mongoose.disconnect(done);
     });
 
     it("Should create and save a valid measure",async ()=>{
