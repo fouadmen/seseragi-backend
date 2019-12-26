@@ -6,9 +6,11 @@ const Device = require('../models/Devices');
 const inactivityTimeout = 70000;
 
 function stateTopicHandler(_data){
-    if(clients.mqttClients[_data.clientId])
+    if(clients.mqttClients[_data.clientId]){
         timeout.clear(clients.mqttClients[_data.clientId].timeout);
-    clients.mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
+        clients.mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
+    }
+
     if(clients.wsClients[_data.clientId]){
         decorators.statusChange("update", _data);
     }
@@ -16,9 +18,11 @@ function stateTopicHandler(_data){
 
 function outTopicHandler(_data){
     let postRequests = [];
-    if(clients.mqttClients[_data.clientId])
+    if(clients.mqttClients[_data.clientId]){
         timeout.clear(clients.mqttClients[_data.clientId].timeout);
-    clients.mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
+        clients.mqttClients[_data.clientId].timeout = timeout.set(()=>deleteMqttClient(_data.clientId), inactivityTimeout);
+    }
+
     (Object.keys(_data.data)).forEach((dataType)=>{
         const _newMeasure = {
             client: _data.clientId,
