@@ -6,6 +6,7 @@ services:
     restart: always
     ports:
       - '80:9000'
+      - '1883:1883'
     links:
       - mongo
     command: npm start
