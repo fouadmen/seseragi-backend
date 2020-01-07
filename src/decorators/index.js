@@ -20,5 +20,41 @@ function statusChange(event, _data){
     }
 }
 
+const enableFunc = async (job, done)=>{
+    const {command, deviceId} = job.attrs.data;
+
+    if(clients.mqttClients[deviceId]){
+        console.log('enable command : ', command, deviceId);
+        publishToClients(deviceId, 'control', null,command)
+    }else{
+        console.warn('Device is not in the connected list');
+    }
+    done();
+};
+
+const disableFunc = async (job, done)=>{
+    const {command, deviceId} = job.attrs.data;
+
+    if(clients.mqttClients[deviceId]){
+        console.log('disable command : ', command, deviceId);
+        switch (command) {
+            case 'cpnpmode':
+                publishToClients(deviceId, 'control', null,'cphrmode');
+                break;
+            case 'cphrmode':
+                publishToClients(deviceId, 'control', null,'cpnpmode');
+                break;
+            default:
+                publishToClients(deviceId, 'control', null,'cppower');
+                break;
+        }
+    }else{
+        console.log('Device is not in the connected list');
+    }
+    done();
+};
+
 exports.publishToClients = publishToClients;
 exports.statusChange = statusChange;
+exports.enableFunction = enableFunc;
+exports.disableFunction = disableFunc;

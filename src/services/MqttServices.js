@@ -3,7 +3,7 @@ const timeout =require('infinite-timeout');
 const decorators  = require('../decorators');
 const clients = require('../shared');
 const Device = require('../models/Devices');
-const inactivityTimeout = 70000;
+const inactivityTimeout = 1830000;
 
 function stateTopicHandler(_data){
     if(clients.mqttClients[_data.clientId]){
