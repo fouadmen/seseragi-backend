@@ -83,7 +83,7 @@ module.exports = {
         })
     },
     editDevice : (deviceId, query)=>{
-        return Device.findOneAndUpdate({"deviceId" : deviceId}, {$set: query}).then((device)=>{
+        return Device.findOneAndUpdate({"deviceId" : deviceId}, {$set: query}, {new: true}).then((device)=>{
             if(device){
                 let _device = {
                     deviceId:device.deviceId,
