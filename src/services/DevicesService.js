@@ -100,11 +100,6 @@ module.exports = {
                             console.error(err);
                             return false;
                         })
-
-                        .catch(err => {
-                            console.error(err);
-                            return false;
-                        });
                 });
         } else {
             return Device.findOneAndUpdate({"deviceId": deviceId}, {$set: query}, {new: true})
