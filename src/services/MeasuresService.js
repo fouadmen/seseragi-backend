@@ -1,6 +1,6 @@
 const Measure = require('../models/Measure');
 module.exports = {
-    getMeasures : (deviceId, dataType, period)=>{
+    getMeasures : (dataType, deviceId, period)=>{
         let query = {client : deviceId, type : dataType};
         const projection = {"_id":0, "value" : 1 , "time" : 1};
         if(Object.keys(period).length!==0){
