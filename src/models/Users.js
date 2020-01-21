@@ -8,8 +8,8 @@ const UserSchema = new mongoose.Schema({
     role: {type: String, required: true},
     device: [
         {
-            type: mongoose.Schema.Types.String,
-            ref: 'device'
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Device'
         }
     ]
 });

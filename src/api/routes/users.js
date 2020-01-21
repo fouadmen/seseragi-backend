@@ -7,6 +7,8 @@ module.exports = (app)=>{
 
     router.get('/', UsersController.getAllUsers);
 
+    router.get('/:id', UsersController.getUserById);
+
     router.post('/',UsersController.addNewUser);
 
     router.put('/:id',UsersController.modifyUser);
