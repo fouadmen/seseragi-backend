@@ -5,10 +5,17 @@ const DeviceSchema = new mongoose.Schema({
     name: {type: String, required: true},
     time: String,
     state: {type: String, required: true},
-    owners: [
+    user: [
         {
-            type: mongoose.Schema.Types.String,
-            ref:'user'
+            type: mongoose.Schema.Types.ObjectId,
+            unique: true,
+            ref:'User'
+        }
+    ],
+    jobs: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref:'job'//here
         }
     ]
 

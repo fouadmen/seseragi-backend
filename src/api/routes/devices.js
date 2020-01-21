@@ -5,7 +5,9 @@ const DeviceController = require('../../controllers/DevicesController');
 module.exports = (app)=>{
     app.use('/devices', router);
 
-    router.get('/:owner',DeviceController.getDevices);
+    router.get('/',DeviceController.getDevices);
+
+    router.get('/:id',DeviceController.getDeviceById);
 
     router.post('/',DeviceController.addNewDevice);
 
