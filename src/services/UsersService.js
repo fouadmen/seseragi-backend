@@ -25,16 +25,22 @@ module.exports = {
                 return false;
             })
     },
-
-    signIn : (newUser)=>{
+    /**
+     * Creates user if not registered, and generates access Token
+     * @param: userId
+    * */
+    authenticateUser : (newUser)=>{
         const _user = new User(newUser);
-
         return User.create(_user)
-            .then(()=>{return true})
+            .then((user)=>{
+                return user;
+            })
             .catch((err)=>{
                 if(err.code === 11000){
-                    console.warn(err.errmsg);
-                    return false;
+                    return User.findOne({"userId" : newUser.userId})
+                        .populate('device')
+                        .exec()
+                        .then((user)=>{return user});
                 }
                 else{
                     console.error(err);
@@ -43,37 +49,19 @@ module.exports = {
             })
     },
 
-    editUser : (userId, body)=>{
-        const query = body.hasOwnProperty("devices");
-        if(query){
-            return User.findOne({"userId": userId})
+    editUser : (userId, query)=>{
+        if(query.hasOwnProperty("devices")){
+            return User.findOneAndUpdate({"userId": userId}, {$set: {user: query.devices}}, {new: true})
                 .then(async user => {
-                    return Device.find({"deviceId": {$in: query.devices}})
-                        .then(async devices => {
-                            devices.forEach((device) => {
-                                if (!user.device.includes(device._id) && !device.user.includes(user._id)) {
-                                    user.device.push(device._id);
-                                    device.user.push(user._id);
-                                    device.save();
-                                    user.save();
-                                }
-                            });
-                        })
-                        .then(async () => {
-                            return User.findOne({"userId": userId})
-                                .populate('device')
-                                .exec();
-                        })
-                        .then(user => {
-                            return user;
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            return false;
-                        })
+                    await Device.update({_id: {$in: query.devices}, user: {$not : {$all: [user._id]}}}, {$push: {user: user._id}});
+                    await Device.update({_id: {$nin: query.devices}, user: {$all: [user._id]}}, {$pull: {device: user._id}});
+                    return user;
+                }).catch((err) => {
+                    console.error(err);
+                    return false;
                 });
         }else{
-            return User.findOneAndUpdate({"userId" : userId},{$set : body})
+            return User.findOneAndUpdate({"userId" : userId},{$set : query})
                 .then((user)=>{
                     console.log(user);
                     return true;

@@ -9,7 +9,7 @@ module.exports = (app)=>{
 
     router.get('/:id', UsersController.getUserById);
 
-    router.post('/',UsersController.addNewUser);
+    router.post('/',UsersController.authenticateUser);
 
     router.put('/:id',UsersController.modifyUser);
 

@@ -19,8 +19,8 @@ module.exports = {
         }
     },
 
-    addNewUser : async (req, res) => {
-        const state = await UsersService.signIn(req.body);
+    authenticateUser : async (req, res) => {
+        const state = await UsersService.authenticateUser(req.body);
         if(state){
             res.status(200).send(state);
         }else{
