@@ -1,4 +1,5 @@
 const Job = require('../models/Jobs');
+const Device = require('../models/Devices');
 const mScheduler =  require('../decorators/MyScheduler');
 
 module.exports = {
@@ -12,31 +13,18 @@ module.exports = {
     },
     createJob : (job)=>{
         const newJob = new Job(job);
-
-        const promise = new Promise(((resolve, reject) => {
-            Job.create(newJob,(err, job)=>{
-                if(err){
-                    reject(err);
-                }else{
-                    resolve(job);
-                }
-            })
-        }));
-
-        return promise.then((res)=>{
-            return res;
-        }).catch((err)=>{
-            if(err.code === 11000){
-                console.warn(err.errmsg);
-                return true;
-            }
-            else{
-                console.error(err);
-                return false;
-            }
-
-        })
-
+        return Job.create(newJob)
+            .then((_job)=>{
+                return Device.findOneAndUpdate({"deviceId" : _job.deviceId},{$push : {jobs : _job._id}}, {new : true})
+                    .populate('jobs')
+                    .populate('user','userId name device thumbnail role')
+                    .then((device)=>{
+                        return device;
+                    });
+            }).catch((err)=>{
+               console.error(err);
+               return false;
+            });
     },
     editJob : (jobId, query)=>{
         return Job.findOneAndUpdate({"_id" : jobId}, {$set: query}, {new : true}).then(async (job)=>{
