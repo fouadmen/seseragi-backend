@@ -32,7 +32,6 @@ module.exports = {
 
     modifyDevice : async (req, res) => {
         const newDevice = await DevicesService.editDevice(req.params.id, req.body);
-        console.log('here', newDevice);
         if(newDevice){
             res.status(200).send(newDevice);
         }else{

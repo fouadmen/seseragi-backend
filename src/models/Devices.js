@@ -15,7 +15,7 @@ const DeviceSchema = new mongoose.Schema({
     jobs: [
         {
             type: mongoose.Schema.Types.ObjectId,
-            ref:'job'//here
+            ref:'Job'
         }
     ]
 

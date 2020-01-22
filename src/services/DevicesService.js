@@ -5,7 +5,7 @@ module.exports = {
     getDevices: (query) => {
         return Device.find({"user": {$all: [query.owner]}})
             .populate('user', 'userId name device thumbnail role')
-            .populate('job')
+            .populate('jobs')
             .exec()
             .then(devices => {
                 return devices
@@ -19,9 +19,9 @@ module.exports = {
     },
 
     getDeviceById: (id) => {
-        return Device.findById(id)
+        return Device.findOne({"deviceId" : id})
             .populate('user', 'userId name device thumbnail role')
-            .populate('job')
+            .populate('jobs')
             .exec()
             .then(device => {
                 return device
@@ -60,10 +60,7 @@ module.exports = {
 
                             return _device;
                         }
-                    }).catch((err) => {
-                        console.error(err);
-                        return false;
-                    });
+                    })
             } else {
                 console.warn('device already exists');
                 return false;
@@ -75,42 +72,29 @@ module.exports = {
     },
     editDevice: (deviceId, query) => {
         if (query.hasOwnProperty('owners')) {
-            return Device.findOne({"deviceId": deviceId})
+            return Device.findOneAndUpdate({"deviceId": deviceId}, {$set: {user: query.owners}}, {new: true})
+                .populate('user', 'userId name device thumbnail role')
+                .populate('jobs')
                 .then(async device => {
-                    return User.find({"userId": {$in: query.owners}})
-                        .then(async users => {
-                            users.forEach((user) => {
-                                if (!user.device.includes(device._id) && !device.user.includes(user._id)) {
-                                    user.device.push(device._id);
-                                    device.user.push(user._id);
-                                    device.save();
-                                    user.save();
-                                }
-                            });
-                        })
-                        .then(async () => {
-                            return Device.findOne({"deviceId": deviceId})
-                                .populate('user', 'userId name device thumbnail role')
-                                .exec();
-                        })
-                        .then(device => {
-                            return device
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            return false;
-                        })
+                    await User.update({_id: {$in: query.owners}, device: {$not : {$all: [device._id]}}}, {$push: {device: device._id}});
+                    await User.update({_id: {$nin: query.owners}, device: {$all: [device._id]}}, {$pull: {device: device._id}});
+                    return device;
+                }).catch((err) => {
+                    console.error(err);
+                    return false;
                 });
         } else {
             return Device.findOneAndUpdate({"deviceId": deviceId}, {$set: query}, {new: true})
                 .populate('user', 'userId name device thumbnail role')
-                .exec((err, devices) => {
-                    if (err) {
-                        console.error(err);
-                        return false;
-                    }
-                    return devices;
+                .populate('jobs')
+                .exec()
+                .then((devices) => {
+                    return devices
                 })
+                .catch((err) => {
+                    console.error(err);
+                    return false;
+                });
         }
     },
     deleteDevice: (deviceId) => {
