@@ -9,7 +9,7 @@ function handleConnection(connection, query){
     connection.on('close', () => closeHandler(clientID, connectionId));
     connection.on('message', (message) => handleRequest(message));
 
-    axios.get(`http://localhost:9000/devices/${clientID}`).then((devices) => {
+    axios.get(`http://localhost:9000/devices?owner=${clientID}`).then((devices) => {
         devices.data.forEach((d) => {
             if (!clients.wsClients[d.deviceId]) {
                 clients.wsClients[d.deviceId] = [{
@@ -43,10 +43,10 @@ function handleRequest(message){
 }
 
 function closeHandler (clientID, connectionId){
-    axios.get(`http://localhost:9000/devices/${clientID}`).then((response)=>{
+    axios.get(`http://localhost:9000/devices?owner=${clientID}`).then((response)=>{
         response.data.forEach((device)=>{
             if(clients.wsClients[device.deviceId].length===1){
-                decorators.publishToClients(clientID, 'update/disable');
+                decorators.publishToClients(device.deviceId, 'update/disable');
             }
             clients.wsClients[device.deviceId] = clients.wsClients[device.deviceId].filter(client => client.connectionId !== connectionId);
         });
