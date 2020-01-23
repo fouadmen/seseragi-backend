@@ -21,8 +21,10 @@ function statusChange(event, _data){
 }
 
 const enableFunc = async (job, done)=>{
-    const {command, deviceId} = job.attrs.data;
+    const {command, deviceId, active} = job.attrs.data;
 
+    if(active==='0')
+        return ;
     if(clients.mqttClients[deviceId]){
         console.log('enable command : ', command, deviceId);
         publishToClients(deviceId, 'control', null,command)
@@ -33,8 +35,10 @@ const enableFunc = async (job, done)=>{
 };
 
 const disableFunc = async (job, done)=>{
-    const {command, deviceId} = job.attrs.data;
+    const {command, deviceId, active} = job.attrs.data;
 
+    if(active==='0')
+        return ;
     if(clients.mqttClients[deviceId]){
         console.log('disable command : ', command, deviceId);
         switch (command) {
@@ -49,7 +53,7 @@ const disableFunc = async (job, done)=>{
                 break;
         }
     }else{
-        console.log('Device is not in the connected list');
+        console.warn('Device is not in the connected list');
     }
     done();
 };

@@ -34,7 +34,7 @@ class mScheduler {
             this.agenda.define(enableJobName, {}, enableFunction);
             this.agenda.define(disableJobName, {}, disableFunction);
 
-            const jobData = {command : job.command, deviceId: job.deviceId};
+            const jobData = {command : job.command, deviceId: job.deviceId, active : job.active};
             let enable_job = this.agenda.create(enableJobName, jobData);
             let disable_job = this.agenda.create(disableJobName, jobData);
 
