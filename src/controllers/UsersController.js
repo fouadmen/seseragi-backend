@@ -10,17 +10,8 @@ module.exports = {
         }
     },
 
-    getUserById : async (req, res)=>{
+    getUserById : async (req,  res)=>{
         const state = await UsersService.getUserById(req.params.id);
-        if(state){
-            res.status(200).send(state);
-        }else{
-            res.status(520).send(state);
-        }
-    },
-
-    authenticateUser : async (req, res) => {
-        const state = await UsersService.authenticateUser(req.body);
         if(state){
             res.status(200).send(state);
         }else{
