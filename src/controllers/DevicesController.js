@@ -23,10 +23,10 @@ module.exports = {
 
     addNewDevice : async (req, res) => {
         const state = await DevicesService.createDevice(req.body);
-        if(state){
-            res.status(201).send(state);
+        if(state.success){
+            res.status(201).send(state.device);
         }else{
-            res.status(520).send(false);
+            res.status(state.err.code).send(state.err.err);
         }
     },
 
