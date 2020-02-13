@@ -1,5 +1,5 @@
-const User = require('../models/Users');
 const Device = require('../models/Devices');
+const User = require('../models/Users');
 
 module.exports = {
     getAllUsers: ()=>{
@@ -19,39 +19,17 @@ module.exports = {
         return User.findOne({"userId" : id})
             .populate('device')
             .exec()
-            .then((users)=>{return users})
-            .catch((err)=>{
+            .then((user)=>{
+                if(user) return user;
+                throw new Error("No user found");
+            }).catch((err)=>{
                 console.error(err);
                 return false;
             })
     },
-    /**
-     * Creates user if not registered, and generates access Token
-     * @param: userId
-    * */
-    authenticateUser : (newUser)=>{
-        const _user = new User(newUser);
-        return User.create(_user)
-            .then((user)=>{
-                return user;
-            })
-            .catch((err)=>{
-                if(err.code === 11000){
-                    return User.findOne({"userId" : newUser.userId})
-                        .populate('device')
-                        .exec()
-                        .then((user)=>{return user});
-                }
-                else{
-                    console.error(err);
-                    return false;
-                }
-            })
-    },
-
     editUser : (userId, query)=>{
         if(query.hasOwnProperty("devices")){
-            return User.findOneAndUpdate({"userId": userId}, {$set: {user: query.devices}}, {new: true})
+            return User.findOneAndUpdate({"userId": userId}, {$set: {device: query.devices}}, {new: true})
                 .then(async user => {
                     await Device.update({_id: {$in: query.devices}, user: {$not : {$all: [user._id]}}}, {$push: {user: user._id}});
                     await Device.update({_id: {$nin: query.devices}, user: {$all: [user._id]}}, {$pull: {device: user._id}});
