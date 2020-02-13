@@ -2,7 +2,9 @@
   <dictionary name="root">
     <words>
       <w>axios</w>
+      <w>bcrypt</w>
       <w>mosca</w>
+      <w>seseragi</w>
     </words>
   </dictionary>
 </component>
