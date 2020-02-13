@@ -1,31 +1,39 @@
 const axios = require('axios');
 const clients = require('../shared');
 const decorators  = require('../decorators');
-
+/***
+ * Handles connection from client
+ * @param connection: current connection
+ * @param query: contains clientId and their generated token
+ * */
 function handleConnection(connection, query){
     const clientID = query._clientId;
+    const token = query.token;
     const connectionId = '_' + Math.random().toString(36).substr(2, 9);
     console.log(`client : ${connectionId} is connected`);
-    connection.on('close', () => closeHandler(clientID, connectionId));
+    connection.on('close', () => closeHandler(clientID, connectionId, token));
     connection.on('message', (message) => handleRequest(message));
-
-    axios.get(`http://localhost:9000/devices?owner=${clientID}`).then((devices) => {
-        devices.data.forEach((d) => {
-            if (!clients.wsClients[d.deviceId]) {
-                clients.wsClients[d.deviceId] = [{
-                    connection: connection,
-                    connected: true,
-                    connectionId: connectionId
-                }];
-            } else {
-                clients.wsClients[d.deviceId].push({
-                    connection: connection,
-                    connected: true,
-                    connectionId: connectionId
-                });
-            }
-        });
-    })
+    axios.get(`http://localhost:9000/devices?owner=${clientID}`,{headers: { Authorization : token }})
+        .then((res) => {
+            res.data.forEach((device) => {
+                if (!clients.wsClients[device.deviceId]) {
+                    clients.wsClients[device.deviceId] = [{
+                        connection: connection,
+                        connected: true,
+                        connectionId: connectionId
+                    }];
+                } else {
+                    clients.wsClients[device.deviceId].push({
+                        connection: connection,
+                        connected: true,
+                        connectionId: connectionId
+                    });
+                }
+            });
+        }).catch((err)=>{
+            console.error(err);
+        }
+    )
 }
 
 function handleRequest(message){
@@ -42,15 +50,15 @@ function handleRequest(message){
     }
 }
 
-function closeHandler (clientID, connectionId){
-    axios.get(`http://localhost:9000/devices?owner=${clientID}`).then((response)=>{
+function closeHandler (clientID, connectionId, token){
+    axios.get(`http://localhost:9000/devices?owner=${clientID}`, {headers: { Authorization : token }}).then((response)=>{
         response.data.forEach((device)=>{
             if(clients.wsClients[device.deviceId].length===1){
                 decorators.publishToClients(device.deviceId, 'update/disable');
             }
             clients.wsClients[device.deviceId] = clients.wsClients[device.deviceId].filter(client => client.connectionId !== connectionId);
         });
-        console.log("connection closed for client : " + connectionId + " of " + clientID);
+        console.log("connection closed for client : " + connectionId);
     });
 }
 
