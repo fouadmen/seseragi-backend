@@ -2,16 +2,14 @@ const express  =  require('express');
 const UsersController = require('../../controllers/UsersController');
 const router = express.Router();
 
-module.exports = (app)=>{
+module.exports = (app, passport)=>{
     app.use('/users', router);
 
-    router.get('/', UsersController.getAllUsers);
+    router.get('/', passport.authenticate('jwt', {session:false}),UsersController.getAllUsers);
 
-    router.get('/:id', UsersController.getUserById);
+    router.get('/:id', passport.authenticate('jwt', {session:false}),UsersController.getUserById);
 
-    router.post('/',UsersController.authenticateUser);
+    router.put('/:id',passport.authenticate('jwt', {session:false}),UsersController.modifyUser);
 
-    router.put('/:id',UsersController.modifyUser);
-
-    router.delete('/:id',UsersController.deleteUser);
+    router.delete('/:id',passport.authenticate('jwt', {session:false}),UsersController.deleteUser);
 };

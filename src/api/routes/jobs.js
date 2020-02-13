@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router();
 const JobController = require('../../controllers/JobsController');
 
-module.exports = (app)=>{
+module.exports = (app,passport)=>{
     app.use('/jobs', router);
 
-    router.get('/:jobId',JobController.getDeviceJobs);
+    router.get('/:jobId',passport.authenticate('jwt', {session:false}),JobController.getDeviceJobs);
 
-    router.post('/',JobController.addJob);
+    router.post('/',passport.authenticate('jwt', {session:false}),JobController.addJob);
 
-    router.put('/:id',JobController.modifyJob);
+    router.put('/:id',passport.authenticate('jwt', {session:false}),JobController.modifyJob);
 
-    router.delete('/:id',JobController.deleteJob);
+    router.delete('/:id',passport.authenticate('jwt', {session:false}),JobController.deleteJob);
 
 };
