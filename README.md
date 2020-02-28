@@ -1,16 +1,379 @@
 # seseragi-backend
+As its name says, this project handles Passiv Energie Japan LTD Seseragi product backend domain,
+it provides several APIs to control and monitor these products.
 
-As its name says, this project handles Passiv Energie Japan LTD Seseragi product backend domain, 
-it provides several APIs to control and monitor these products. 
+## Install
 
-##Project Structure
-src
-│   app.js          # App entry point
-└───api             # Express route controllers for all the endpoints of the app
-└───config          # Environment variables and configuration related stuff
-└───jobs            # Jobs definitions for agenda.js
-└───loaders         # Split the startup process into modules
-└───models          # Database models
-└───services        # All the business logic is here
-└───subscribers     # Event handlers for async task
+`npm install`
 
+## Run the app
+
+`pm2 start index.js`
+
+## REST API
+
+## Authentication
+seseragi backend’s API is a JWT-based API. All requests are made to endpoints beginning: http://server_address/
+
+### Browser based authenticaion (e.g POSTMAN)
+To garant access to the resources, you will have to create your own account, by sending your credentials to [POST] : http://server_address/register, the request body should have :
+    ``` {
+        "userId": "mail@example.com",
+        "name": "Your name",
+        "password": "Your password >= 8",
+        "role": "user"
+    }```
+
+If you already have registred, to get your JWT Token, you will have to send your credentional  to [POST] : http://server_address/login, the request body should contain:
+```
+{
+        "email": "mail@example.com",
+        "password": "Your password >= 8",
+
+}
+```
+Once registred you will get a Bearer JWT token valid for one hour.
+    
+```
+{
+        "success": true,
+        "token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJwZWoubWFubm91QGdtYWlsLmNvbSIsIm5hbWUiOiJGb3VhZCBNYW5ub3UiLCJpYXQiOjE1ODI4NTY4NDMsImV4cCI6MTU4Mjg3NDg0M30.ZQKHwFWqQiKhu4O4FUaYf4LUn4g6dCbtS1Mgboth_9M"
+ }
+```
+You can now use "token" key to access resources, make sure it is included in your header.
+
+Possible errors:
+
+
+
+Error code
+Description
+
+
+
+
+400
+Account exists already - No existant account - Password is incorrect
+
+
+500
+Server internal issue - Cannot generate token
+
+
+
+
+Users API
+
+Get list of users
+GET /users/
+
+Get user by id
+GET /users/email
+
+Edit a user
+PUT /users/email
+This request body should contain the attribute to change.
+    { 
+        devices : {"DEVICE1 MAC", "DEVICE1 MAC"} 
+    }
+
+Delete a user
+DELETE /users/email
+
+Possible errors:
+
+
+
+Error code
+Description
+
+
+
+
+401
+Unauthorized, probably your token has expired
+
+
+520
+No user found - db connectivity
+
+
+
+
+Devices API
+
+Get list of devices
+GET /devices/
+
+Get device by id
+GET /devices/[DEVICE MAC]
+
+Create a device
+POST /devices/
+This request body should contain :
+Request body parameters :
+
+
+
+Parameter
+type
+Required?
+Description
+
+
+
+
+deviceId
+string
+true
+device's MAC adress
+
+
+name
+string
+true
+device's name
+
+
+owner
+string
+true
+device's owner email
+
+
+time
+string
+true
+connection timestamp
+
+
+
+    {
+        "deviceId": "A4:CF:12:6B:DA:8C",
+        "name": "Home",
+        "time": "123457878",
+        "state": "connected",
+        "owner": "pej.mannou@gmail.com"
+    }
+All the fields are required
+
+Edit a device
+PUT /devices/[DEVICE MAC]
+This request body should contain the attribute to change.
+
+
+
+Parameter
+type
+Required?
+Description
+
+
+
+
+owners
+json obj
+true
+owners' email adresses
+
+
+name
+string
+true
+device name
+
+
+state
+string
+true
+device state connected / disconnected
+
+
+
+    { 
+        owners : {"USER1 EMAIL", "USER2 EMAIL",...} 
+        name : "SAMPLE"
+        state : "connected/disconnected"
+    }
+
+Delete a device
+DELETE /devicess/[DEVICE MAC]
+
+Possible errors:
+
+
+
+Error code
+Description
+
+
+
+
+401
+Unauthorized, probably your token has expired
+
+
+400
+Device exists already
+
+
+520
+No device found - Server internal problem
+
+
+
+
+Measures API
+
+Get measures
+GET /measures/[DATA TYPE]?deviceId=[DEVICE MAC]&from=[Timestamp]&to=[Timestamp]
+Note that timestamp should be UNIX format (10 chars)
+
+Insert measures
+POST /measure/
+Request body parameters :
+
+
+
+Parameter
+type
+Required?
+Description
+
+
+
+
+client
+string
+true
+origin device's MAC adress
+
+
+type
+string
+true
+data type
+
+
+value
+string
+true
+data value
+
+
+time
+string
+true
+measurement timestamp
+
+
+
+    { 
+        client : "DEVICE MAC" 
+        type : "Data type"
+        value : "Value"
+        time : "timestamp"
+    }
+
+Possible errors:
+
+
+
+Error code
+Description
+
+
+
+
+401
+Unauthorized, probably your token has expired
+
+
+520
+Server internal problem - db connectivity
+
+
+
+
+Automated jobs API
+
+Create a job
+POST /jobs/
+Request body parameters :
+
+
+
+Parameter
+type
+Required?
+Description
+
+
+
+
+jobId
+string
+true
+a unique id you give to your job
+
+
+command
+string
+true
+command to be executed
+
+
+deviceId
+string
+true
+target device's MAC adress
+
+
+from
+string
+true
+Time when enable command is executed
+
+
+to
+string
+true
+Time when disable command is executed
+
+
+active
+string
+true
+state of job (active = 1 otherwise = 0)
+
+
+
+
+Get a job
+GET /jobs/jobId
+Note that jobId is the given id when creating the job
+
+Edit a job
+PUT /jobs/:id
+Note that id is _id generated by mongodb
+
+Delete a job
+DELETE /jobs/:id
+Note that id is _id generated by mongodb
+
+Possible errors:
+
+
+
+Error code
+Description
+
+
+
+
+401
+Unauthorized, probably your token has expired
+
+
+520
+Unknown job - db connectivity
