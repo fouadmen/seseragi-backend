@@ -42,112 +42,63 @@ Once registred you will get a Bearer JWT token valid for one hour.
 ```
 You can now use "token" key to access resources, make sure it is included in your header.
 
-Possible errors:
+### Possible errors:
 
+|Error | Code Description |
+| ------ | ----- | 
+| 400 | Account exists already - No existant account - Password is incorrect |
+| 500 | Server internal issue - Cannot generate token|
 
+## Users API
 
-Error code
-Description
+### Get list of users
+` GET /users/`
 
+### Get user by id
+` GET /users/email`
 
-
-
-400
-Account exists already - No existant account - Password is incorrect
-
-
-500
-Server internal issue - Cannot generate token
-
-
-
-
-Users API
-
-Get list of users
-GET /users/
-
-Get user by id
-GET /users/email
-
-Edit a user
-PUT /users/email
+### Edit a user
+`PUT /users/email `
 This request body should contain the attribute to change.
-    { 
+
+``` { 
         devices : {"DEVICE1 MAC", "DEVICE1 MAC"} 
     }
+```
 
-Delete a user
-DELETE /users/email
+### Delete a user
 
-Possible errors:
+`DELETE /users/email`
 
+### Possible errors:
 
-
-Error code
-Description
-
-
-
-
-401
-Unauthorized, probably your token has expired
+|Error | Code Description |
+| ------ | ----- | 
+| 401 | Unauthorized, probably your token has expired |
+| 500 | No user found - db connectivity|
 
 
-520
-No user found - db connectivity
+## Devices API
 
+### Get list of devices
+`GET /devices/`
 
+### Get device by id
+`GET /devices/[DEVICE MAC]`
 
-
-Devices API
-
-Get list of devices
-GET /devices/
-
-Get device by id
-GET /devices/[DEVICE MAC]
-
-Create a device
-POST /devices/
+### Create a device
+`POST /devices/`
 This request body should contain :
 Request body parameters :
 
+|Parameter | type | Required? | Description|
+| ------ | ----- | ------ | ----- | 
+|deviceId|string|true|device's MAC adress|
+|name|string|true|device's name|
+|owner|string|true|device's owner email|
+|time|string|true|connection timestamp|
 
-
-Parameter
-type
-Required?
-Description
-
-
-
-
-deviceId
-string
-true
-device's MAC adress
-
-
-name
-string
-true
-device's name
-
-
-owner
-string
-true
-device's owner email
-
-
-time
-string
-true
-connection timestamp
-
-
-
+```
     {
         "deviceId": "A4:CF:12:6B:DA:8C",
         "name": "Home",
@@ -155,225 +106,114 @@ connection timestamp
         "state": "connected",
         "owner": "pej.mannou@gmail.com"
     }
+```
+
 All the fields are required
 
-Edit a device
-PUT /devices/[DEVICE MAC]
+### Edit a device
+`PUT /devices/[DEVICE MAC]`
 This request body should contain the attribute to change.
 
 
-
-Parameter
-type
-Required?
-Description
-
-
-
-
-owners
-json obj
-true
-owners' email adresses
-
-
-name
-string
-true
-device name
-
-
-state
-string
-true
-device state connected / disconnected
-
-
-
+|Parameter | type | Required? | Description|
+| ------ | ----- | ------ | ----- | 
+|owners|json obj|true|owners' email adresses|
+|name|string|true|device's name|
+|state|string|true|device state connected / disconnected|
+|time|string|true|connection timestamp|
+```
     { 
         owners : {"USER1 EMAIL", "USER2 EMAIL",...} 
         name : "SAMPLE"
         state : "connected/disconnected"
     }
+```
 
-Delete a device
-DELETE /devicess/[DEVICE MAC]
+### Delete a device
+`DELETE /devicess/[DEVICE MAC]`
 
-Possible errors:
+### Possible errors:
 
-
-
-Error code
-Description
-
-
-
-
-401
-Unauthorized, probably your token has expired
+|Error | Code Description |
+| ------ | ----- |
+| 401 | Unauthorized, probably your token has expired |
+| 400 | Device exists already |
+| 520 | No device found - Server internal problem|
 
 
-400
-Device exists already
+## Measures API
 
+### Get measures
 
-520
-No device found - Server internal problem
+`GET /measures/[DATA TYPE]?deviceId=[DEVICE MAC]&from=[Timestamp]&to=[Timestamp]`
 
-
-
-
-Measures API
-
-Get measures
-GET /measures/[DATA TYPE]?deviceId=[DEVICE MAC]&from=[Timestamp]&to=[Timestamp]
 Note that timestamp should be UNIX format (10 chars)
 
-Insert measures
-POST /measure/
+### Insert measures
+`POST /measure/`
+
 Request body parameters :
 
-
-
-Parameter
-type
-Required?
-Description
-
-
-
-
-client
-string
-true
-origin device's MAC adress
-
-
-type
-string
-true
-data type
-
-
-value
-string
-true
-data value
-
-
-time
-string
-true
-measurement timestamp
-
-
-
+|Parameter | type | Required? | Description|
+| ------ | ----- | ------ | ----- | 
+|client|json obj|true|origin device's MAC adress|
+|type|string|true|data type|
+|value|string|true|data value|
+|time|string|true|measurement timestamp|
+```
     { 
         client : "DEVICE MAC" 
         type : "Data type"
         value : "Value"
         time : "timestamp"
     }
+```
 
-Possible errors:
+### Possible errors:
 
-
-
-Error code
-Description
-
-
-
-
-401
-Unauthorized, probably your token has expired
+|Error | Code Description |
+| ------ | ----- |
+| 401 | Unauthorized, probably your token has expired |
+| 520 | Server internal problem - db connectivity|
 
 
-520
-Server internal problem - db connectivity
+## Automated jobs API
 
-
-
-
-Automated jobs API
-
-Create a job
-POST /jobs/
+###  Create a job
+`POST /jobs/`
 Request body parameters :
 
 
 
-Parameter
-type
-Required?
-Description
+|Parameter | type | Required? | Description|
+| ------ | ----- | ------ | ----- | 
+|jobId|json obj|true|a unique id you give to your job|
+|command|string|true|command to be executed|
+|from|string|true|Time when enable command is executed|
+|to|string|true|Time when disable command is executed|
+|active|string|true|state of job (active = 1 otherwise = 0)|
 
+### Get a job
 
+`GET /jobs/jobId`
 
-
-jobId
-string
-true
-a unique id you give to your job
-
-
-command
-string
-true
-command to be executed
-
-
-deviceId
-string
-true
-target device's MAC adress
-
-
-from
-string
-true
-Time when enable command is executed
-
-
-to
-string
-true
-Time when disable command is executed
-
-
-active
-string
-true
-state of job (active = 1 otherwise = 0)
-
-
-
-
-Get a job
-GET /jobs/jobId
 Note that jobId is the given id when creating the job
 
-Edit a job
-PUT /jobs/:id
+### Edit a job
+
+`PUT /jobs/:id`
+
 Note that id is _id generated by mongodb
 
-Delete a job
-DELETE /jobs/:id
+### Delete a job
+
+`DELETE /jobs/:id`
+
 Note that id is _id generated by mongodb
 
-Possible errors:
+### Possible errors:
 
-
-
-Error code
-Description
-
-
-
-
-401
-Unauthorized, probably your token has expired
-
-
-520
-Unknown job - db connectivity
+|Error | Code Description |
+| ------ | ----- |
+| 401 | Unauthorized, probably your token has expired |
+| 520 | Unknown job - db connectivity|
