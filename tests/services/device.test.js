@@ -4,33 +4,38 @@ const DevicesService = require('../../src/services/DevicesService');
 const connectionString = 'mongodb://localhost:27017/SeseragiDB';
 
 const validDeviceData = {
-    "deviceId": "KK:6B:2D:99:7B:94",
+    "deviceId": "TT:TT:TT:TT:TT:TT",
     "time": "1578468492",
     "state": "connected",
-    "owner": "fouadmannou@gmail.com",
+    "owner": "test@gmail.com",
     "name": "main"
 };
 
 const invalidDeviceData = {
     "time": "1578468492",
     "state": "connected",
-    "owner": "fouadmannou@gmail.com",
+    "owner": "test@gmail.com",
     "name": "main"
 };
 
-const validDeviceId = "KK:6B:2D:99:7B:94";
+const validDeviceId = "TT:TT:TT:TT:TT:TT";
 
-const invalidDeviceId= "NN:6B:2D:99:7B:94";
+const invalidDeviceId = "TT:TT:TT:TT:TT:TN";
 
 const dataToModify = { "name" : "TEST NAME"};
 
 function initializeDeviceDatabase(){
-    return Promise.resolve(Devices.deleteOne({"deviceId": "KK:6B:2D:99:7B:94"}));
+    return Promise.resolve(Devices.deleteOne({"deviceId": "TT:TT:TT:TT:TT:TT"}));
 }
 
 describe('Device services test', function () {
     beforeAll(async ()=>{
-        await mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:true, useCreateIndex:true, useFindAndModify:false},(err)=>{
+        await mongoose.connect(connectionString, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            useCreateIndex: false,
+            useFindAndModify: false
+        }, (err) => {
             if (err) {
                 console.error(err);
                 process.exit(1);

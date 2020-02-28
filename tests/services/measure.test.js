@@ -26,7 +26,7 @@ function initializeMeasureDatabase(){
     return Promise.resolve(Measures.deleteOne({"deviceId" : deviceId}));
 }
 
-describe('Device services test', function () {
+describe('measure services test', function () {
     beforeAll(async ()=>{
         await mongoose.connect(connectionString,{useNewUrlParser: true, useUnifiedTopology:true, useCreateIndex:true, useFindAndModify:false},(err)=>{
             if (err) {
