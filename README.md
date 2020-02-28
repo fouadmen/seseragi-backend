@@ -16,15 +16,24 @@ it provides several APIs to control and monitor these products.
 seseragi backend’s API is a JWT-based API. All requests are made to endpoints beginning: http://server_address/
 
 ### Browser based authenticaion (e.g POSTMAN)
-To garant access to the resources, you will have to create your own account, by sending your credentials to [POST] : http://server_address/register, the request body should have :
-    ``` {
+To garant access to the resources, you will have to create your own account, by sending your credentials to 
+`[POST] : http://server_address/register`
+
+The request body should have :
+
+``` {
         "userId": "mail@example.com",
         "name": "Your name",
         "password": "Your password >= 8",
         "role": "user"
-    }```
+    }
+```
 
-If you already have registred, to get your JWT Token, you will have to send your credentional  to [POST] : http://server_address/login, the request body should contain:
+If you already have registred, to get your JWT Token, you will have to send your credentional  to 
+`[POST] : http://server_address/login` 
+
+The request body should contain:
+
 ```
 {
         "email": "mail@example.com",
@@ -61,9 +70,10 @@ You can now use "token" key to access resources, make sure it is included in you
 `PUT /users/email `
 This request body should contain the attribute to change.
 
-``` { 
-        devices : {"DEVICE1 MAC", "DEVICE1 MAC"} 
-    }
+``` 
+{ 
+    devices : {"DEVICE1 MAC", "DEVICE1 MAC"} 
+}
 ```
 
 ### Delete a user
@@ -99,13 +109,13 @@ Request body parameters :
 |time|string|true|connection timestamp|
 
 ```
-    {
-        "deviceId": "A4:CF:12:6B:DA:8C",
-        "name": "Home",
-        "time": "123457878",
-        "state": "connected",
-        "owner": "pej.mannou@gmail.com"
-    }
+{
+    "deviceId": "A4:CF:12:6B:DA:8C",
+    "name": "Home",
+    "time": "123457878",
+    "state": "connected",
+    "owner": "pej.mannou@gmail.com"
+}
 ```
 
 All the fields are required
@@ -122,11 +132,11 @@ This request body should contain the attribute to change.
 |state|string|true|device state connected / disconnected|
 |time|string|true|connection timestamp|
 ```
-    { 
-        owners : {"USER1 EMAIL", "USER2 EMAIL",...} 
-        name : "SAMPLE"
-        state : "connected/disconnected"
-    }
+{ 
+    owners : {"USER1 EMAIL", "USER2 EMAIL",...} 
+    name : "SAMPLE"
+    state : "connected/disconnected"
+}
 ```
 
 ### Delete a device
@@ -161,12 +171,12 @@ Request body parameters :
 |value|string|true|data value|
 |time|string|true|measurement timestamp|
 ```
-    { 
-        client : "DEVICE MAC" 
-        type : "Data type"
-        value : "Value"
-        time : "timestamp"
-    }
+{ 
+    client : "DEVICE MAC" 
+    type : "Data type"
+    value : "Value"
+    time : "timestamp"
+}
 ```
 
 ### Possible errors:
